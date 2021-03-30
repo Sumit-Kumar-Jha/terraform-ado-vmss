@@ -29,9 +29,12 @@ resource "azurerm_subnet" "internal" {
 resource "random_password" "password" {
   length           = 16
   special          = true
-  override_special = "_%@"
+  override_special = "_!-:=+*#"
+  upper            = true
+  number           = true
+  lower            = true
 }
-
+    
 resource "azurerm_linux_virtual_machine_scale_set" "ado-vmss" {
   name                            = "ado-vmss"
   resource_group_name             = data.azurerm_resource_group.project-rg.name
