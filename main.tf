@@ -40,14 +40,15 @@ resource "azurerm_linux_virtual_machine_scale_set" "ado-vmss" {
   resource_group_name             = data.azurerm_resource_group.project-rg.name
   location                        = local.location
   sku                             = local.vmsize 
-  instances                       = 1
+  instances                       = 2
   admin_username                  = "adminuser"
   admin_password                  = random_password.password.result
   disable_password_authentication = false
+  single_placement_group          = false
+  overprovision                   = false
+  platform_fault_domain_count     = 1
   source_image_id                 = data.azurerm_image.agent-image.id 
-  # source_image_reference {
-  #  id = data.azurerm_image.agent-image.id
-  # }
+  upgrade_mode                    = "Manual"
 
   os_disk {
     storage_account_type = "Standard_LRS"
