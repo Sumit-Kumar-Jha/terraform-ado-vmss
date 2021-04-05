@@ -67,31 +67,3 @@ resource "azurerm_linux_virtual_machine_scale_set" "ado-vmss" {
     }
   }
 }
-
-# Create a Subnet within the Virtual Network
-resource "azurerm_subnet" "AzureBastionSubnet" {
-  name                 = "subnet-ado"
-  virtual_network_name = azurerm_virtual_network.ado-vnet.name
-  resource_group_name  = data.azurerm_resource_group.project-rg.name
-  address_prefix       = "10.100.2.0/24"
-}
-
-resource "azurerm_public_ip" "bastion-pip" {
-  name                = "bastionpip"
-  location            = local.location
-  resource_group_name = azurerm_resource_group.project-rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
-
-resource "azurerm_bastion_host" "bastion-host" {
-  name                = "bastion"
-  location            = local.location
-  resource_group_name = azurerm_resource_group.project-rg.name
-
-  ip_configuration {
-    name                 = "ip-config"
-    subnet_id            = azurerm_subnet.AzureBastionSubnet.id 
-    public_ip_address_id = azurerm_public_ip.bastion-pip.id
-  }
-}
