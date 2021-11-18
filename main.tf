@@ -23,7 +23,7 @@ resource "azurerm_subnet" "internal" {
   name                 = "subnet-ado"
   virtual_network_name = azurerm_virtual_network.ado-vnet.name
   resource_group_name  = data.azurerm_resource_group.project-rg.name
-  address_prefix       = "10.100.1.0/24"
+  address_prefix       = "10.100.1.0/26"
 }
 
 
@@ -36,26 +36,19 @@ resource "random_password" "password" {
   lower            = true
 }
     
-resource "azurerm_linux_virtual_machine_scale_set" "ado-vmss" {
-  name                            = "ado-vmss"
-  resource_group_name             = data.azurerm_resource_group.project-rg.name
-  location                        = local.location
-  sku                             = local.vmsize 
-  instances                       = 2
-  admin_username                  = "adminuser"
-  admin_password                  = random_password.password.result
-  disable_password_authentication = false
-  single_placement_group          = false
-  overprovision                   = false
-  platform_fault_domain_count     = 1
-  source_image_id                 = data.azurerm_image.agent-image.id 
-  upgrade_mode                    = "Manual"
+# Create virtual machine
+resource "azurerm_virtual_machine" "vm" {
+  name                  = "vmterraform"
+  location              = local.location
+  resource_group_name   = data.azurerm_resource_group.project-rg.name
+  vm_size               = local.vmsize
 
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
+  storage_os_disk {
+    name              = "stvmpmvmterraformos"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
   }
-
   network_interface {
     name    = "nic"
     primary = true
@@ -66,4 +59,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "ado-vmss" {
       subnet_id = azurerm_subnet.internal.id
     }
   }
-}
+
+  storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+
+  os_profile {
+    computer_name  = "vmterraform"
+    admin_username = "adminuser"
+    admin_password = random_password.password.result
+  }
